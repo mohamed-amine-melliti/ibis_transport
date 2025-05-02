@@ -29,15 +29,13 @@ class AuthenticationLoginPage extends StatefulWidget {
 }
 
 class _AuthenticationLoginPageState extends State<AuthenticationLoginPage> {
-  final AuthenticationLoginCubit _loginCubit =
-      DI.resolve<AuthenticationLoginCubit>();
+  final AuthenticationLoginCubit _loginCubit = DI.resolve<AuthenticationLoginCubit>();
   final GlobalKey<FormState> _formKey = GlobalKey();
   AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
-  final AuthenticationRequest _request = const AuthenticationRequest(
-    email: '',
-    password: '',
-  );
+  String _identifiant = '';
+  String _nom = '';
+  String _motDePasse = '';
 
   @override
   Widget build(BuildContext context) {
@@ -60,9 +58,7 @@ class _AuthenticationLoginPageState extends State<AuthenticationLoginPage> {
           body: Padding(
             padding: AppDimensions.padding.bigHorizontal(),
             child: SafeArea(
-              child: _buildBody(
-                state: state,
-              ),
+              child: _buildBody(state: state),
             ),
           ),
         ),
@@ -70,30 +66,18 @@ class _AuthenticationLoginPageState extends State<AuthenticationLoginPage> {
     );
   }
 
-  Widget _buildBody({
-    required AuthenticationLoginState state,
-  }) {
+  Widget _buildBody({required AuthenticationLoginState state}) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Spacer(
-          flex: 4,
-        ),
+        const Spacer(flex: 4),
         const LoginHeader(),
-        const Spacer(
-          flex: 3,
-        ),
+        const Spacer(flex: 3),
         _buildForm(),
-        SizedBox(
-          height: AppDimensions.padding.bigValue,
-        ),
-        _buildLoginButton(
-          isLoading: state.isLoading,
-        ),
-        SizedBox(
-          height: AppDimensions.padding.bigValue,
-        ),
+        SizedBox(height: AppDimensions.padding.bigValue),
+        _buildLoginButton(isLoading: state.isLoading),
+        SizedBox(height: AppDimensions.padding.bigValue),
         _buildFooter(),
         const Spacer(),
       ],
@@ -107,15 +91,21 @@ class _AuthenticationLoginPageState extends State<AuthenticationLoginPage> {
       child: Column(
         children: [
           AdaptiveTextField(
-            labelText: AppLoc.of(context).inputEmailLabel,
-            validator: ValidationBuilder().isValidEmail().build,
+            labelText: 'Identifiant (Code de la tournée)',
+            onChanged: (value) => _identifiant = value,
+            validator: ValidationBuilder().isNotBlank().build,
           ),
-          SizedBox(
-            height: AppDimensions.padding.bigValue,
-          ),
+          SizedBox(height: AppDimensions.padding.bigValue),
           AdaptiveTextField(
-            labelText: AppLoc.of(context).inputPasswordLabel,
+            labelText: 'Nom (Nom du convoyeur)',
+            onChanged: (value) => _nom = value,
+            validator: ValidationBuilder().isNotBlank().build,
+          ),
+          SizedBox(height: AppDimensions.padding.bigValue),
+          AdaptiveTextField(
+            labelText: 'Mot de passe',
             obscureText: true,
+            onChanged: (value) => _motDePasse = value,
             validator: ValidationBuilder().isNotBlank().build,
           ),
         ],
@@ -123,9 +113,7 @@ class _AuthenticationLoginPageState extends State<AuthenticationLoginPage> {
     );
   }
 
-  Widget _buildLoginButton({
-    required bool isLoading,
-  }) {
+  Widget _buildLoginButton({required bool isLoading}) {
     return AdaptiveLoadingButton(
       decoration: AppDecorations.button.primary(),
       isLoading: isLoading,
@@ -134,12 +122,16 @@ class _AuthenticationLoginPageState extends State<AuthenticationLoginPage> {
           _autovalidateMode = AutovalidateMode.always;
         });
         if (_formKey.currentState?.validate() ?? false) {
-          _loginCubit.login(_request);
+          final request = AuthenticationRequest(
+            email: _identifiant,
+            password: _motDePasse,
+          );
+          _loginCubit.login(request);
         }
       },
       padding: EdgeInsets.all(AppDimensions.padding.defaultValue),
       child: Text(
-        AppLoc.of(context).logInPageLogInButton,
+        'Connexion', // Replace with AppLoc if needed for localization
         style: AppTextStyles.button.primary(),
       ),
     );
@@ -150,21 +142,15 @@ class _AuthenticationLoginPageState extends State<AuthenticationLoginPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          AppLoc.of(context).logInPageFooterTitle,
-          style: AppTextStyles.caption2().copyWith(
-            color: AppColors.navy,
-          ),
+          'Pas encore inscrit ?',
+          style: AppTextStyles.caption2().copyWith(color: AppColors.navy),
         ),
         AdaptiveButton(
-          //TODO (MT): Handle SignUp
-          onPressed: () =>
-              AdaptiveAlertDialogFactory.showContentUnavailable(context),
+          onPressed: () => AdaptiveAlertDialogFactory.showContentUnavailable(context),
           padding: EdgeInsets.all(AppDimensions.padding.smallValue),
           child: Text(
-            AppLoc.of(context).logInPageSignUpButton,
-            style: AppTextStyles.caption2().copyWith(
-              color: AppColors.primary100,
-            ),
+            'Inscription',
+            style: AppTextStyles.caption2().copyWith(color: AppColors.primary100),
           ),
         ),
       ],
